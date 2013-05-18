@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AutonomousServiceBus", "AutonomousServiceBus\AutonomousServiceBus.fsproj", "{720D1291-6480-4DB0-A081-0ED51FFB7B1F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplication", "WebApplication\WebApplication.csproj", "{77DF705C-4659-403B-8376-B7D8E9BA60CB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{720D1291-6480-4DB0-A081-0ED51FFB7B1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{720D1291-6480-4DB0-A081-0ED51FFB7B1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{720D1291-6480-4DB0-A081-0ED51FFB7B1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{720D1291-6480-4DB0-A081-0ED51FFB7B1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77DF705C-4659-403B-8376-B7D8E9BA60CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77DF705C-4659-403B-8376-B7D8E9BA60CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77DF705C-4659-403B-8376-B7D8E9BA60CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77DF705C-4659-403B-8376-B7D8E9BA60CB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
