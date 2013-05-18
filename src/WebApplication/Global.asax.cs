@@ -12,7 +12,7 @@ namespace WebApplication
 
         protected void Application_Start(object sender, EventArgs e)
         {
-            new AutonomousServiceBus.AutonomousServiceBus.AppHost().Init();
+            new AutonomousServiceBus.AutonomousService.AppHost().Init();
         }
 
         protected void Session_Start(object sender, EventArgs e)
