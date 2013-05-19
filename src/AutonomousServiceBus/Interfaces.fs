@@ -1,8 +1,9 @@
-﻿module interfaces
+﻿namespace AutonomousServiceBus
+module interfaces =
     open System
     open System.Collections.Generic
 
-    type ASBEventArgs(msg:string) =
+    type ASBEventArgs(msg:Dictionary<string, obj>) =
         inherit EventArgs()
         member this.Message = msg
     type ASBEventDelegate =
