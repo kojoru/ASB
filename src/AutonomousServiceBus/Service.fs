@@ -22,7 +22,24 @@
                 TestTypeReturn(request.test)
             member this.Any (request:TestType):TestTypeReturn =
                 this.proc request
-                
+        
+        type StoreTypeReturn(stored) =
+            member val stored:List<string> = stored with get, set
+
+        [<Route("/store")>]
+        type StoreType(toStore) =
+            member val toStore = toStore with get,set
+            new() = StoreType("")
+            interface IReturn<StoreTypeReturn>
+        let mutable Stored = ["0"] 
+        type StoreTypeService() =
+            inherit Service()
+            member this.Post(request: StoreType) =
+                //Stored <- List.append Stored [request.toStore]
+                //this.Stored
+                Stored <- request.toStore :: Stored
+            member this.Get(request: StoreType) =
+                StoreTypeReturn(Stored)
 
 
             (*interface IService<TestType> with

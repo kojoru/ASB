@@ -1,9 +1,12 @@
 ﻿namespace AutonomousServiceBus
     module Processor =
         open interfaces
+        open AutonomousService
         open System
         open System.Collections.Generic
         open System.Threading
+        open System.Threading.Tasks
+        open ServiceStack.ServiceClient.Web
         (*type Rule(event, proc) =
             interface IRule with
                 member this.ProcessProvider = proc
@@ -66,7 +69,13 @@
 
         let printParameter propertyName (data:Dictionary<string, obj>) : unit =
             branchOnExistence (fun b propertyName -> printfn "Got %s %s" (b.ToString()) propertyName) (fun text -> printfn "No %s provided" text) propertyName data
-            
+        
+        let sendToService serviceUrl propertyName data: unit =
+            let client = new JsonServiceClient(serviceUrl)
+            let send text _ =
+                let storeObj = StoreType(text)
+                client.Post storeObj |>ignore
+            branchOnExistence send (fun x-> ignore()) propertyName data
         
         let printSeconds = printParameter "seconds"
 
@@ -82,6 +91,8 @@
 
         let start() =
             processor [getRules (getProcess printSeconds) (getEvent every2Seconds)]
+        let startSelfPing url =
+            Task.Factory.StartNew (fun()-> processor [getRules (getProcess (sendToService url "seconds")) (getEvent every2Seconds)])
 
         //let Rules = [yield ]
 

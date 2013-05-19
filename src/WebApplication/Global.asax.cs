@@ -12,8 +12,11 @@ namespace WebApplication
 
         protected void Application_Start(object sender, EventArgs e)
         {
-            AutonomousServiceBus.Processor.start();
-            new AutonomousServiceBus.AutonomousService.AppHost().Init();
+            //AutonomousServiceBus.Processor.start();
+
+            var appHost = new AutonomousServiceBus.AutonomousService.AppHost();
+            appHost.Init();
+            AutonomousServiceBus.Processor.startSelfPing("http://localhost:26708");
         }
 
         protected void Session_Start(object sender, EventArgs e)

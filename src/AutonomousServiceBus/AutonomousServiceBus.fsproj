@@ -76,7 +76,7 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Library1.fs" />
+    <Compile Include="Service.fs" />
     <None Include="Script.fsx" />
     <None Include="packages.config" />
     <Compile Include="Interfaces.fs" />
