@@ -17,7 +17,7 @@
                 member IDisposable.Dispose = disposeFunc
                 member this.OnEvent = event*)
 
-        let getRules (proc, event) =
+        let getRules proc event =
             { new IRule with
                 member this.ProcessProvider = proc
                 member this.EventProvider = event
@@ -43,31 +43,32 @@
             }
     
         let callEvery2Seconds (func:Dictionary<string, obj>->unit) =
-            let rec callEvery2Seconds'(seconds) =
+            let rec loop(seconds) =
                 Thread.Sleep(2000)
-                func(System.Linq.Enumerable.ToDictionary( [|seconds+2|], fun(x) -> "seconds"))
-                callEvery2Seconds' (seconds+2)
-            callEvery2Seconds' 0 |> ignore
+                let newSeconds = seconds+2
+                func(System.Linq.Enumerable.ToDictionary( [|newSeconds|], fun(x) -> "seconds"))
+                loop newSeconds
+            loop 0 |> ignore
 
-        let initialize (evt:Event<ASBEventDelegate, ASBEventArgs>) =
-            let fireEvent(dic:Dictionary<string, obj>) = 
-                evt.Trigger(null, ASBEventArgs(dic))
-            callEvery2Seconds fireEvent
+        let every2Seconds (evt:Event<ASBEventDelegate, ASBEventArgs>) =
+            (fun dic -> evt.Trigger(null, ASBEventArgs(dic))) |> callEvery2Seconds 
          
-        let processProperty (action:bool*obj->unit,propertyName:string, data:Dictionary<string, obj>) =
+        let processProperty action propertyName (data:Dictionary<string, obj>) =
             action (data.TryGetValue(propertyName))
 
-        let printAnything (propertyName:string, data:Dictionary<string, obj>) : unit =
+        let branchOnExistence (successAct:string->string->unit) (failAct:string->unit) propertyName (data:Dictionary<string, obj>) =
             let go(prop) =
-                let message = 
-                    match prop with
-                    | (a, b) when a=true -> "Got "+b.ToString()+" "+propertyName
-                    | _ -> "No "+propertyName+" provided"
-                printfn "%s" message
-            processProperty(go, propertyName, data)
+                match prop with
+                | (a, b) when a=true -> successAct (b.ToString()) propertyName
+                | _ -> failAct propertyName
+            processProperty go propertyName data
+
+
+        let printParameter propertyName (data:Dictionary<string, obj>) : unit =
+            branchOnExistence (fun b propertyName -> printfn "Got %s %s" (b.ToString()) propertyName) (fun text -> printfn "No %s provided" text) propertyName data
+            
         
-        let printSeconds dic = 
-            printAnything ("seconds", dic)
+        let printSeconds = printParameter "seconds"
 
         let processor(rules) =
            let rec loop list =
@@ -80,7 +81,7 @@
            loop rules
 
         let start() =
-            processor [getRules (getProcess(printSeconds), getEvent(initialize))]
+            processor [getRules (getProcess printSeconds) (getEvent every2Seconds)]
 
         //let Rules = [yield ]
 

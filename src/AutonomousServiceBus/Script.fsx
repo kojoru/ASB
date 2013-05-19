@@ -5,7 +5,6 @@
 #load "Processor.fs"
 //#load "Library1.fs"
 open AutonomousServiceBus
-Processor.start
     
 
 // Define your library scripting code here
