@@ -26,14 +26,13 @@
         let prepareRule (rule:IRule) = 
             rule.EventProvider.OnEvent.Add(fun args -> rule.ProcessProvider.Process(args.Message))
 
-        let eventForUs = new Event<ASBEventDelegate, ASBEventArgs>()
-        let getEvent (initFunc:IEventProvider -> unit) =
-        
+        let getEvent (initFunc:Event<ASBEventDelegate, ASBEventArgs> -> unit) =
+            let event = new Event<ASBEventDelegate, ASBEventArgs>()
             { new IEventProvider with
                 member this.Dispose() = ()
-                member this.Initialize() = initFunc this
+                member this.Initialize() = initFunc event
                 [<CLIEvent>]
-                member this.OnEvent = eventForUs.Publish
+                member this.OnEvent = event.Publish
                interface IDisposable with
                 member this.Dispose() = ()
             }
@@ -47,19 +46,19 @@
             let rec callEvery2Seconds'(seconds) =
                 Thread.Sleep(2000)
                 func(System.Linq.Enumerable.ToDictionary( [|seconds+2|], fun(x) -> "seconds"))
-                callEvery2Seconds' seconds+2
+                callEvery2Seconds' (seconds+2)
             callEvery2Seconds' 0 |> ignore
 
-        let initialize (evt:IEventProvider) =
+        let initialize (evt:Event<ASBEventDelegate, ASBEventArgs>) =
             let fireEvent(dic:Dictionary<string, obj>) = 
-                eventForUs.Trigger(null, ASBEventArgs(dic))
+                evt.Trigger(null, ASBEventArgs(dic))
             callEvery2Seconds fireEvent
                 
-        let printSeconds (data:Dictionary<string, obj>) =
-            let seconds = data.TryGetValue("seconds")
+        let printAnything (propertyName:string, data:Dictionary<string, obj>) : unit =
+            let seconds = data.TryGetValue(propertyName)
             let message = 
                 match seconds with
-                | (a, b) when a=true -> "Got "+b.ToString()+" seconds"
+                | (a, b) when a=true -> "Got "+b.ToString()+" "+propertyName
                 | _ -> "error"
             printfn "%s" message
 
@@ -74,7 +73,7 @@
            loop rules
 
         let start() =
-            processor [getRules (getProcess(printSeconds), getEvent(initialize))]
+            processor [getRules (getProcess(fun dic -> printAnything ("seconds", dic)), getEvent(initialize))]
 
         //let Rules = [yield ]
 
