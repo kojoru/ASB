@@ -53,14 +53,21 @@
             let fireEvent(dic:Dictionary<string, obj>) = 
                 evt.Trigger(null, ASBEventArgs(dic))
             callEvery2Seconds fireEvent
-                
+         
+        let processProperty (action:bool*obj->unit,propertyName:string, data:Dictionary<string, obj>) =
+            action (data.TryGetValue(propertyName))
+
         let printAnything (propertyName:string, data:Dictionary<string, obj>) : unit =
-            let seconds = data.TryGetValue(propertyName)
-            let message = 
-                match seconds with
-                | (a, b) when a=true -> "Got "+b.ToString()+" "+propertyName
-                | _ -> "error"
-            printfn "%s" message
+            let go(prop) =
+                let message = 
+                    match prop with
+                    | (a, b) when a=true -> "Got "+b.ToString()+" "+propertyName
+                    | _ -> "No "+propertyName+" provided"
+                printfn "%s" message
+            processProperty(go, propertyName, data)
+        
+        let printSeconds dic = 
+            printAnything ("seconds", dic)
 
         let processor(rules) =
            let rec loop list =
@@ -73,7 +80,7 @@
            loop rules
 
         let start() =
-            processor [getRules (getProcess(fun dic -> printAnything ("seconds", dic)), getEvent(initialize))]
+            processor [getRules (getProcess(printSeconds), getEvent(initialize))]
 
         //let Rules = [yield ]
 
