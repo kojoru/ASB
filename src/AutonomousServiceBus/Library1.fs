@@ -16,11 +16,6 @@
             interface IReturn<TestTypeReturn>
             member val test:String = "" with get, set
            
-        
-            
-                
-            
-
         type TestTypeService() =
             inherit Service()
             member this.proc (request:TestType) =
