@@ -76,10 +76,11 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Interfaces.fs" />
+    <Compile Include="Agents.fs" />
     <Compile Include="Service.fs" />
     <None Include="Script.fsx" />
     <None Include="packages.config" />
-    <Compile Include="Interfaces.fs" />
     <Compile Include="Processor.fs" />
   </ItemGroup>
   <PropertyGroup>

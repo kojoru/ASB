@@ -1,12 +1,12 @@
 ﻿namespace AutonomousServiceBus
     module Processor =
-        open interfaces
-        open AutonomousService
+        open Interfaces
         open System
         open System.Collections.Generic
         open System.Threading
         open System.Threading.Tasks
         open ServiceStack.ServiceClient.Web
+        open AutonomousService
         (*type Rule(event, proc) =
             interface IRule with
                 member this.ProcessProvider = proc
@@ -32,10 +32,10 @@
         let getEvent (initFunc:Event<ASBEventDelegate, ASBEventArgs> -> unit) =
             let event = new Event<ASBEventDelegate, ASBEventArgs>()
             { new IEventProvider with
-                member this.Dispose() = ()
                 member this.Initialize() = initFunc event
                 [<CLIEvent>]
                 member this.OnEvent = event.Publish
+                member this.Name = "Unnamed event"
                interface IDisposable with
                 member this.Dispose() = ()
             }
@@ -47,10 +47,11 @@
     
         let callEvery2Seconds (func:Dictionary<string, obj>->unit) =
             let rec loop(seconds) =
-                Thread.Sleep(2000)
+                Async.RunSynchronously( async{
+                do! Async.Sleep(2000)
                 let newSeconds = seconds+2
-                func(System.Linq.Enumerable.ToDictionary( [|newSeconds|], fun(x) -> "seconds"))
-                loop newSeconds
+                func(System.Linq.Enumerable.ToDictionary( [|newSeconds|], fun _ -> "seconds"))
+                loop newSeconds})
             loop 0 |> ignore
 
         let every2Seconds (evt:Event<ASBEventDelegate, ASBEventArgs>) =

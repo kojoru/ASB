@@ -1,5 +1,6 @@
 ﻿namespace AutonomousServiceBus
-module interfaces =
+
+module Interfaces =
     open System
     open System.Collections.Generic
 
@@ -12,9 +13,9 @@ module interfaces =
     type IEventProvider =
         inherit IDisposable
         abstract Initialize: unit -> unit
-        abstract Dispose: unit -> unit
         [<CLIEvent>]
         abstract OnEvent: IEvent<ASBEventDelegate, ASBEventArgs>
+        abstract Name : string
 
     type IProcessProvider =
         abstract Process: Dictionary<string, obj> -> unit
