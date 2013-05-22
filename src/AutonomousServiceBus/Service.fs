@@ -8,12 +8,6 @@
     open Agents
 
     module AutonomousService =
-        ///Преобразовать Dictionary в map
-        ///https://gist.github.com/theburningmonk/3363893
-        let toMap dictionary = 
-            (dictionary :> seq<_>)
-            |> Seq.map (|KeyValue|)
-            |> Map.ofSeq
 
         [<Route("/events")>]
         type EventType (event, name, init, dispose) =

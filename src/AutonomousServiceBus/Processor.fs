@@ -20,6 +20,14 @@
                 member IDisposable.Dispose = disposeFunc
                 member this.OnEvent = event*)
 
+//        ///Преобразовать Dictionary в map
+//        ///https://gist.github.com/theburningmonk/3363893
+//        let toMap dictionary = 
+//            (dictionary :> seq<_>)
+//            |> Seq.map (|KeyValue|)
+//            |> Map.ofSeq
+
+
         let getRules proc event =
             { new IRule with
                 member this.ProcessProvider = proc
@@ -45,17 +53,22 @@
                 member this.Process(x) = processFunc x
             }
     
-        let callEvery2Seconds (func:Dictionary<string, obj>->unit) =
-            let rec loop(seconds) =
-                Async.RunSynchronously( async{
-                do! Async.Sleep(2000)
-                let newSeconds = seconds+2
-                func(System.Linq.Enumerable.ToDictionary( [|newSeconds|], fun _ -> "seconds"))
-                loop newSeconds})
-            loop 0 |> ignore
+        let callEvery (ms:int) (func:Dictionary<string, obj>->unit) =
+            let rec loop(milliseconds) =
+                 async{
+                do! Async.Sleep(ms)
+                let newMilliseconds = milliseconds + ms
+                func(System.Linq.Enumerable.ToDictionary( [|newMilliseconds/1000|], fun _ -> "seconds"))
+                do! loop newMilliseconds}
+            Async.RunSynchronously(loop 0) |> ignore
 
-        let every2Seconds (evt:Event<ASBEventDelegate, ASBEventArgs>) =
-            (fun dic -> evt.Trigger(null, ASBEventArgs(dic))) |> callEvery2Seconds 
+        let callEvery2Seconds (func:Dictionary<string, obj>->unit) =
+            callEvery 2000 func
+
+        let dicToEvent func (evt:Event<ASBEventDelegate, ASBEventArgs>) =
+            (fun dic -> evt.Trigger(null, ASBEventArgs(dic))) |> func 
+
+        let every2Seconds = dicToEvent callEvery2Seconds
          
         let processProperty action propertyName (data:Dictionary<string, obj>) =
             action (data.TryGetValue(propertyName))
@@ -93,7 +106,7 @@
         let start() =
             processor [getRules (getProcess printSeconds) (getEvent every2Seconds)]
         let startSelfPing url =
-            Task.Factory.StartNew (fun()-> processor [getRules (getProcess (sendToService url "seconds")) (getEvent every2Seconds)])
+            Task.Factory.StartNew (fun()-> processor [getRules (getProcess (sendToService url "seconds")) (getEvent (dicToEvent (callEvery 200)))])
 
         //let Rules = [yield ]
 
