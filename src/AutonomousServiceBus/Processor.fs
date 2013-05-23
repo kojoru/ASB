@@ -37,38 +37,40 @@
         let prepareRule (rule:IRule) = 
             rule.EventProvider.OnEvent.Add(fun args -> rule.ProcessProvider.Process(args.Message))
 
-        let getEvent (initFunc:Event<ASBEventDelegate, ASBEventArgs> -> unit) =
+        let getEvent initFunc =
             let event = new Event<ASBEventDelegate, ASBEventArgs>()
+            let dicToEvent func =
+                (fun dic -> event.Trigger(null, ASBEventArgs(dic))) |> func 
             { new IEventProvider with
-                member this.Initialize() = initFunc event
+                member this.Initialize() = dicToEvent initFunc 
                 [<CLIEvent>]
                 member this.OnEvent = event.Publish
                 member this.Name = "Unnamed event"
                interface IDisposable with
                 member this.Dispose() = ()
             }
+            
 
         let getProcess (processFunc:Dictionary<string, obj>->unit) =
             { new IProcessProvider with
                 member this.Process(x) = processFunc x
             }
     
-        let callEvery (ms:int) (func:Dictionary<string, obj>->unit) =
+        let callEvery (ms:int) func =
             let rec loop(milliseconds) =
                  async{
                 do! Async.Sleep(ms)
                 let newMilliseconds = milliseconds + ms
-                func(System.Linq.Enumerable.ToDictionary( [|newMilliseconds/1000|], fun _ -> "seconds"))
+                let arr = [|("seconds", newMilliseconds/1000);("milliseconds", newMilliseconds);("every", ms)|]
+                let dic = System.Linq.Enumerable.ToDictionary(arr, (fun (x,y) -> x), (fun (x,y)->y:>obj))
+                func dic
                 do! loop newMilliseconds}
-            Async.RunSynchronously(loop 0) |> ignore
+            Async.Start(loop 0) |> ignore
 
         let callEvery2Seconds (func:Dictionary<string, obj>->unit) =
             callEvery 2000 func
 
-        let dicToEvent func (evt:Event<ASBEventDelegate, ASBEventArgs>) =
-            (fun dic -> evt.Trigger(null, ASBEventArgs(dic))) |> func 
-
-        let every2Seconds = dicToEvent callEvery2Seconds
+        //let every2Seconds = dicToEvent callEvery2Seconds
          
         let processProperty action propertyName (data:Dictionary<string, obj>) =
             action (data.TryGetValue(propertyName))
@@ -104,9 +106,9 @@
            loop rules
 
         let start() =
-            processor [getRules (getProcess printSeconds) (getEvent every2Seconds)]
+            processor [getRules (getProcess printSeconds) (getEvent (callEvery 2000))]
         let startSelfPing url =
-            Task.Factory.StartNew (fun()-> processor [getRules (getProcess (sendToService url "seconds")) (getEvent (dicToEvent (callEvery 200)))])
+            Task.Factory.StartNew (fun()-> processor [getRules (getProcess (sendToService url "milliseconds")) (getEvent (callEvery 200))])
 
         //let Rules = [yield ]
 
