@@ -6,7 +6,7 @@
         open System.Threading
         open System.Threading.Tasks
         open ServiceStack.ServiceClient.Web
-        open AutonomousService
+        open ServiceContracts
         (*type Rule(event, proc) =
             interface IRule with
                 member this.ProcessProvider = proc
@@ -86,14 +86,23 @@
         let printParameter propertyName (data:Dictionary<string, obj>) : unit =
             branchOnExistence (fun b propertyName -> printfn "Got %s %s" (b.ToString()) propertyName) (fun text -> printfn "No %s provided" text) propertyName data
         
-        let sendToService serviceUrl propertyName data: unit =
+        let sendToService serviceUrl pipeName (propertyNameFunc:Dictionary<string,obj>->string) data: unit =
             let client = new JsonServiceClient(serviceUrl)
-            let send text _ =
-                let storeObj = StoreType(text, "numbers")
+            let send text =
+                let storeObj = StoreType(text, pipeName)
                 client.Post storeObj |>ignore
-            branchOnExistence send (fun x-> ignore()) propertyName data
+            send (propertyNameFunc data)
+            //branchOnExistence send (fun x-> ignore()) propertyName data
         
         let printSeconds = printParameter "seconds"
+
+        let getOneParameter name (dic:Dictionary<string, obj>)=
+            match dic.TryGetValue(name) with
+            | (a, b) when a=true -> b.ToString()
+            | _ -> ""
+
+        let toJson dic =
+            ServiceStack.Text.StringExtensions.ToJson(dic)
 
         let processor(rules) =
            let rec loop list =
@@ -107,8 +116,9 @@
 
         let start() =
             processor [getRules (getProcess printSeconds) (getEvent (callEvery 2000))]
-        let startSelfPing url ms =
-            Task.Factory.StartNew (fun()-> processor [getRules (getProcess (sendToService url "milliseconds")) (getEvent (callEvery ms))])
+        let startSelfPing url ms pipeName =
+            Task.Factory.StartNew (fun()-> processor [getRules (getProcess (sendToService url pipeName toJson)) (getEvent (callEvery ms))])
 
         //let Rules = [yield ]
 
+        //(getOneParameter "milliseconds")

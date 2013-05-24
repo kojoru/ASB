@@ -78,10 +78,11 @@
   <ItemGroup>
     <Compile Include="Interfaces.fs" />
     <Compile Include="Agents.fs" />
-    <Compile Include="Service.fs" />
-    <None Include="Script.fsx" />
-    <None Include="packages.config" />
+    <Compile Include="ServiceContracts.fs" />
     <Compile Include="Processor.fs" />
+    <Compile Include="Service.fs" />
+    <None Include="packages.config" />
+    <None Include="Script.fsx" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

@@ -6,6 +6,7 @@
     open ServiceStack.ServiceInterface
     open Interfaces
     open Agents
+    open ServiceContracts
 
     module AutonomousService =
 
@@ -33,36 +34,6 @@
 //        let mutable Rules = []
 
 
-        type TestTypeReturn(testString) =
-            member val test:String = "Hello, "+testString+"!" with get, set
-
-        [<Route("/service/{test}")>]
-        type TestType() =
-            interface IReturn<TestTypeReturn>
-            member val test:String = "" with get, set
-
-                
-        type StoreTypeReturn(stored) =
-            member val stored:List<string> = stored with get, set
-
-        [<Route("/store")>]
-        [<Route("/store/{pipe}")>]
-        type StoreType(toStore, pipe) =
-            member val toStore = toStore with get,set
-            member val pipe = pipe with get,set
-            new() = StoreType("", "default")
-            new(toStore) = StoreType(toStore, "default")
-            interface IReturn<StoreTypeReturn>
-        
-        type EventTypeReturn() =
-            member val period:int = 0 with get, set
-
-        [<Route("/event")>]
-        type EventType(period) =
-            member val period = period with get,set
-            new() = EventType(2000)
-            interface IReturn<EventTypeReturn>
-
            
         type TestTypeService() =
             inherit Service()
@@ -73,15 +44,7 @@
 
         type StoreTypeService() =
             inherit Service()
-            member val keeper : KeepingAgent = KeepingAgent() with get, set
             member val keepers : AgentAgent = AgentAgent() with get, set
-//            member this.getAgent name =
-//                match this.keeperMap.TryFind name with
-//                    |Some (agent) -> agent
-//                    |None -> 
-//                        let newAgent = KeepingAgent()
-//                        this.keeperMap <- this.keeperMap.Add(name, newAgent)
-//                        this.Container.
             member this.Post(request: StoreType) =
                 this.keepers.Take(request.pipe).Give(request.toStore)
             member this.Get(request: StoreType) =
@@ -109,8 +72,6 @@
             inherit AppHostBase
             new() = { inherit AppHostBase ("Test service",typeof<AppHost>.Assembly) }
             override this.Configure container = 
-                let defaultAgent = KeepingAgent()
-                container.Register (defaultAgent)
                 container.Register(AgentAgent())
 
 
