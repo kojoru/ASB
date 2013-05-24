@@ -89,7 +89,7 @@
         let sendToService serviceUrl propertyName data: unit =
             let client = new JsonServiceClient(serviceUrl)
             let send text _ =
-                let storeObj = StoreType(text)
+                let storeObj = StoreType(text, "numbers")
                 client.Post storeObj |>ignore
             branchOnExistence send (fun x-> ignore()) propertyName data
         

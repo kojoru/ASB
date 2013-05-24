@@ -46,9 +46,12 @@
             member val stored:List<string> = stored with get, set
 
         [<Route("/store")>]
-        type StoreType(toStore) =
+        [<Route("/store/{pipe}")>]
+        type StoreType(toStore, pipe) =
             member val toStore = toStore with get,set
-            new() = StoreType("")
+            member val pipe = pipe with get,set
+            new() = StoreType("", "default")
+            new(toStore) = StoreType(toStore, "default")
             interface IReturn<StoreTypeReturn>
         
         type EventTypeReturn() =
@@ -80,9 +83,9 @@
 //                        this.keeperMap <- this.keeperMap.Add(name, newAgent)
 //                        this.Container.
             member this.Post(request: StoreType) =
-                this.keepers.Take("default").Give(request.toStore)
+                this.keepers.Take(request.pipe).Give(request.toStore)
             member this.Get(request: StoreType) =
-                StoreTypeReturn(this.keepers.Take("default").Take(10))
+                StoreTypeReturn(this.keepers.Take(request.pipe).Take(10))
 
         type EventTypeService() =
             inherit Service()
