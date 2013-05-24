@@ -2,27 +2,34 @@
 // for more guidance on F# programming.
 
 #load "Interfaces.fs"
-//#load "Processor.fs"
+#load "Agents.fs"
+open AutonomousServiceBus.Agents
 //#load "Library1.fs"
-//open AutonomousServiceBus
-//open Interfaces
-//open System.Collections.Generic
-//open System.Threading
-//
-//type EventGenerator() =
-//    let initFunc (ms:int) evt parameters m=
-//        Thread.Sleep ms
-//
-//
-//    member this.GetEvent (data:Dictionary<string, obj>) =
-//            { new IEventProvider with
-//                member this.Initialize() = initFunc event
-//                [<CLIEvent>]
-//                member this.OnEvent = event.Publish
-//                member this.Name = "Unnamed event"
-//               interface System.IDisposable with
-//                member this.Dispose() = ()
-//            }
+
+    type Agent<'T> = MailboxProcessor<'T>
+    type AgentMessage =
+        |  TakeAgent of string*AsyncReplyChannel<KeepingAgent>
+        |  Reset
+
+    type AgentAgent() =
+        let agentHolder = Agent.Start(fun agent ->
+            let rec loop (agents:Map<string, KeepingAgent>) = async {
+                let! msg = agent.Receive()
+                match msg with
+                | TakeAgent (name, reply) ->
+                    match agents.TryFind name with
+                    | Some(agent) -> 
+                        reply.Reply(agent)
+                        return! loop agents
+                    | None -> 
+                        let newAgent = KeepingAgent()
+                        reply.Reply(newAgent)
+                        return! loop (agents.Add(name, newAgent))
+                | Reset ->
+                    return! loop Map.empty<string, KeepingAgent>}
+            loop Map.empty<string, KeepingAgent>)
+        member this.Take name =
+            agentHolder.PostAndReply(fun x -> TakeAgent(name, x))
     
 
 // Define your library scripting code here

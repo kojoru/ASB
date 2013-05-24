@@ -9,17 +9,17 @@
 
     module AutonomousService =
 
-        [<Route("/events")>]
-        type EventType (event, name, init, dispose) =
-            interface IEventProvider with
-                [<CLIEvent>]
-                member this.OnEvent = event.Publish 
-                member val Name = name
-                member this.Initialize() = init
-                member this.Dispose() = dispose
-            new() =
-                let emptyEvent = Event<ASBEventDelegate, ASBEventArgs>() 
-                new EventType(emptyEvent,"",(),())
+//        [<Route("/events")>]
+//        type EventType (event, name, init, dispose) =
+//            interface IEventProvider with
+//                [<CLIEvent>]
+//                member this.OnEvent = event.Publish 
+//                member val Name = name
+//                member this.Initialize() = init
+//                member this.Dispose() = dispose
+//            new() =
+//                let emptyEvent = Event<ASBEventDelegate, ASBEventArgs>() 
+//                new EventType(emptyEvent,"",(),())
 
 //        [<Route("/actions")>]
 //        type ActionType (name, action) =
@@ -28,7 +28,7 @@
 //                member val Name = name with get, set
             
 
-        let mutable Events : EventType list = []
+//        let mutable Events : EventType list = []
 //        let mutable Actions = []
 //        let mutable Rules = []
 
@@ -50,6 +50,15 @@
             member val toStore = toStore with get,set
             new() = StoreType("")
             interface IReturn<StoreTypeReturn>
+        
+        type EventTypeReturn() =
+            member val period:int = 0 with get, set
+
+        [<Route("/event")>]
+        type EventType(period) =
+            member val period = period with get,set
+            new() = EventType(2000)
+            interface IReturn<EventTypeReturn>
 
            
         type TestTypeService() =
@@ -62,15 +71,32 @@
         type StoreTypeService() =
             inherit Service()
             member val keeper : KeepingAgent = KeepingAgent() with get, set
+            member val keepers : AgentAgent = AgentAgent() with get, set
+//            member this.getAgent name =
+//                match this.keeperMap.TryFind name with
+//                    |Some (agent) -> agent
+//                    |None -> 
+//                        let newAgent = KeepingAgent()
+//                        this.keeperMap <- this.keeperMap.Add(name, newAgent)
+//                        this.Container.
             member this.Post(request: StoreType) =
-                this.keeper.Give(request.toStore)
+                this.keepers.Take("default").Give(request.toStore)
             member this.Get(request: StoreType) =
-                StoreTypeReturn(this.keeper.Take(10))
+                StoreTypeReturn(this.keepers.Take("default").Take(10))
 
         type EventTypeService() =
             inherit Service()
-            member this.Get(request: EventType) =
-                Events
+            //member val keeper : KeepingAgent = KeepingAgent() with get, set
+            member this.Post(request: EventType) =
+                ignore()
+                //this.keeper.Give(request.toStore)
+//            member this.Get(request: StoreType) =
+//                StoreTypeReturn(this.keeper.Take(10))
+
+//        type EventTypeService() =
+//            inherit Service()
+//            member this.Get(request: EventType) =
+//                Events
 
 
             (*interface IService<TestType> with
@@ -80,6 +106,8 @@
             inherit AppHostBase
             new() = { inherit AppHostBase ("Test service",typeof<AppHost>.Assembly) }
             override this.Configure container = 
-                container.Register (KeepingAgent())
+                let defaultAgent = KeepingAgent()
+                container.Register (defaultAgent)
+                container.Register(AgentAgent())
 
 

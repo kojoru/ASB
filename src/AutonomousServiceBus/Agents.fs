@@ -31,4 +31,26 @@ module Agents =
         member this.Take(num) =
             chat.PostAndReply(fun x -> GetFirst(num, x))
     
+    type AgentMessage =
+        |  TakeAgent of string*AsyncReplyChannel<KeepingAgent>
+        |  Reset
 
+    type AgentAgent() =
+        let agentHolder = Agent.Start(fun agent ->
+            let rec loop (agents:Map<string, KeepingAgent>) = async {
+                let! msg = agent.Receive()
+                match msg with
+                | TakeAgent (name, reply) ->
+                    match agents.TryFind name with
+                    | Some(agent) -> 
+                        reply.Reply(agent)
+                        return! loop agents
+                    | None -> 
+                        let newAgent = KeepingAgent()
+                        reply.Reply(newAgent)
+                        return! loop (agents.Add(name, newAgent))
+                | Reset ->
+                    return! loop Map.empty<string, KeepingAgent>}
+            loop Map.empty<string, KeepingAgent>)
+        member this.Take name =
+            agentHolder.PostAndReply(fun x -> TakeAgent(name, x))

@@ -107,8 +107,8 @@
 
         let start() =
             processor [getRules (getProcess printSeconds) (getEvent (callEvery 2000))]
-        let startSelfPing url =
-            Task.Factory.StartNew (fun()-> processor [getRules (getProcess (sendToService url "milliseconds")) (getEvent (callEvery 200))])
+        let startSelfPing url ms =
+            Task.Factory.StartNew (fun()-> processor [getRules (getProcess (sendToService url "milliseconds")) (getEvent (callEvery ms))])
 
         //let Rules = [yield ]
 
