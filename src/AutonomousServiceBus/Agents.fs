@@ -31,13 +31,13 @@ module Agents =
         member this.Take(num) =
             chat.PostAndReply(fun x -> GetFirst(num, x))
     
-    type AgentMessage =
-        |  TakeAgent of string*AsyncReplyChannel<KeepingAgent>
+    type AgentMessage<'a, 'b when 'a:comparison> =
+        |  TakeAgent of 'a*AsyncReplyChannel<'b>
         |  Reset
 
-    type AgentAgent() =
+    type DictionaryAgent<'a,'b  when 'a:comparison and 'b:(new: unit->'b)>() =
         let agentHolder = Agent.Start(fun agent ->
-            let rec loop (agents:Map<string, KeepingAgent>) = async {
+            let rec loop (agents:Map<'a,'b>) = async {
                 let! msg = agent.Receive()
                 match msg with
                 | TakeAgent (name, reply) ->
@@ -46,11 +46,13 @@ module Agents =
                         reply.Reply(agent)
                         return! loop agents
                     | None -> 
-                        let newAgent = KeepingAgent()
+                        let newAgent = new 'b()
                         reply.Reply(newAgent)
                         return! loop (agents.Add(name, newAgent))
                 | Reset ->
-                    return! loop Map.empty<string, KeepingAgent>}
-            loop Map.empty<string, KeepingAgent>)
+                    return! loop Map.empty<'a,'b>}
+            loop Map.empty<'a, 'b>)
         member this.Take name =
             agentHolder.PostAndReply(fun x -> TakeAgent(name, x))
+
+     type AgentAgent = DictionaryAgent<string, KeepingAgent>
