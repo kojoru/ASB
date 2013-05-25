@@ -4,6 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Security;
 using System.Web.SessionState;
+using ServiceStack.ServiceClient.Web;
 
 namespace WebApplication
 {
@@ -16,7 +17,10 @@ namespace WebApplication
 
             var appHost = new AutonomousServiceBus.AutonomousService.AppHost();
             appHost.Init();
-            AutonomousServiceBus.Processor.startSelfPing("http://localhost:26708", 200, "numbers");
+            //var c = new JsonServiceClient("http://localhost:26708");
+            //var eventType = new AutonomousServiceBus.ServiceContracts.EventType(200, "numbers");
+            //c.Post(eventType);
+            //AutonomousServiceBus.Processor.startSelfPing("http://localhost:26708", 200, "numbers");
         }
 
         protected void Session_Start(object sender, EventArgs e)

@@ -90,7 +90,7 @@
             let client = new JsonServiceClient(serviceUrl)
             let send text =
                 let storeObj = StoreType(text, pipeName)
-                client.Post storeObj |>ignore
+                client.Post storeObj |> ignore
             send (propertyNameFunc data)
             //branchOnExistence send (fun x-> ignore()) propertyName data
         

@@ -29,13 +29,25 @@
                 interface IReturn<StoreTypeReturn>
         
             type EventTypeReturn() =
-                member val period:int = 0 with get, set
+                member val period:int = 0 with get, set 
+                       
+            type RuleTypeReturn() =
+                member val name = "" with get, set
 
             [<Route("/event")>]
-            type EventType(period, pipe) =
+            type EventType(period, pipe, name) =
                 member val period = period with get, set
                 member val pipe = pipe with get, set
-                new() = EventType(2000, "default")
+                member val name = name with get, set
+                new() = EventType(2000, "default", "unnamed event "+DateTime.UtcNow.ToLongTimeString())
                 interface IReturn<EventTypeReturn>
+
+            [<Route("/rule")>]
+            type RuleType(eventName, pipeName, processName) =
+                member val eventName = eventName with get, set
+                member val pipeName = pipeName with get, set
+                member val processName = processName with get, set
+                new() = RuleType("","","")
+                interface IReturn<RuleTypeReturn>
 
 

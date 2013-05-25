@@ -7,6 +7,7 @@
     open Interfaces
     open Agents
     open ServiceContracts
+    open Processor
 
     module AutonomousService =
 
@@ -54,10 +55,8 @@
             inherit Service()
             //member val keeper : KeepingAgent = KeepingAgent() with get, set
             member this.Post(request: EventType) =
-                ignore()
-                //this.keeper.Give(request.toStore)
-//            member this.Get(request: StoreType) =
-//                StoreTypeReturn(this.keeper.Take(10))
+                let host uri = System.Uri(uri).GetLeftPart(UriPartial.Authority).ToString()
+                Processor.startSelfPing (host(this.Request.AbsoluteUri)) request.period request.pipe
 
 //        type EventTypeService() =
 //            inherit Service()
