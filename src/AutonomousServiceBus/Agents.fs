@@ -2,13 +2,13 @@
 module Agents =
     type Agent<'T> = MailboxProcessor<'T>
 
-    type Message =
-        |  TakeDataChunk of string
-        |  GetData of AsyncReplyChannel<List<string>>
-        |  GetFirst of int*AsyncReplyChannel<List<string>>
+    type Message<'a> =
+        |  TakeDataChunk of 'a
+        |  GetData of AsyncReplyChannel<List<'a>>
+        |  GetFirst of int*AsyncReplyChannel<List<'a>>
         |  Reset
 
-    type KeepingAgent() =
+    type StackAgent<'a>() =
         let chat = Agent.Start(fun agent -> 
             let rec loop texts = async {
                 let! msg = agent.Receive()
@@ -22,37 +22,39 @@ module Agents =
                     reply.Reply (Seq.truncate num texts |> Seq.toList)
                     return! loop texts
                 | Reset ->
-                    return! loop [] }
-            loop [] )
-        member this.Give(s) =
+                    return! loop List.Empty }
+            loop List.Empty )
+        member this.Give(s:'a) =
             chat.Post(TakeDataChunk s)
         member this.Take() =
             chat.PostAndReply(GetData)
         member this.Take(num) =
             chat.PostAndReply(fun x -> GetFirst(num, x))
+    type EventKeeper = StackAgent<string>
+    type TextKeepingAgent = StackAgent<string>
     
     type AgentMessage<'a, 'b when 'a:comparison> =
-        |  TakeAgent of 'a*AsyncReplyChannel<'b>
+        |  Take of 'a*AsyncReplyChannel<'b>
         |  Reset
 
-    type DictionaryAgent<'a,'b  when 'a:comparison and 'b:(new: unit->'b)>() =
+    type LazyInitAgent<'a,'b  when 'a:comparison and 'b:(new: unit->'b)>() =
         let agentHolder = Agent.Start(fun agent ->
-            let rec loop (agents:Map<'a,'b>) = async {
+            let rec loop (items:Map<'a,'b>) = async {
                 let! msg = agent.Receive()
                 match msg with
-                | TakeAgent (name, reply) ->
-                    match agents.TryFind name with
+                | Take (name, reply) ->
+                    match items.TryFind name with
                     | Some(agent) -> 
                         reply.Reply(agent)
-                        return! loop agents
+                        return! loop items
                     | None -> 
                         let newAgent = new 'b()
                         reply.Reply(newAgent)
-                        return! loop (agents.Add(name, newAgent))
+                        return! loop (items.Add(name, newAgent))
                 | Reset ->
-                    return! loop Map.empty<'a,'b>}
+                    return! loop Map.empty}
             loop Map.empty<'a, 'b>)
         member this.Take name =
-            agentHolder.PostAndReply(fun x -> TakeAgent(name, x))
+            agentHolder.PostAndReply(fun x -> Take(name, x))
 
-     type AgentAgent = DictionaryAgent<string, KeepingAgent>
+     type AgentAgent = LazyInitAgent<string, TextKeepingAgent>
