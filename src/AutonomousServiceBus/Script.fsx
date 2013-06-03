@@ -4,33 +4,24 @@
 #load "Interfaces.fs"
 #load "Agents.fs"
 open AutonomousServiceBus.Agents
+#I @"E:\Source\ASB\src\ClassLibrary\bin\Release\"
+#r "ClassLibrary"
+open ClassLibrary
+#I @"E:\Source\ASB\src\packages\HtmlAgilityPack.1.4.6\lib\Net45\"
+#r "HtmlAgilityPack"
+open HtmlAgilityPack
 //#load "Library1.fs"
-
-    type Agent<'T> = MailboxProcessor<'T>
-    type AgentMessage =
-        |  TakeAgent of string*AsyncReplyChannel<KeepingAgent>
-        |  Reset
-
-    type AgentAgent() =
-        let agentHolder = Agent.Start(fun agent ->
-            let rec loop (agents:Map<string, KeepingAgent>) = async {
-                let! msg = agent.Receive()
-                match msg with
-                | TakeAgent (name, reply) ->
-                    match agents.TryFind name with
-                    | Some(agent) -> 
-                        reply.Reply(agent)
-                        return! loop agents
-                    | None -> 
-                        let newAgent = KeepingAgent()
-                        reply.Reply(newAgent)
-                        return! loop (agents.Add(name, newAgent))
-                | Reset ->
-                    return! loop Map.empty<string, KeepingAgent>}
-            loop Map.empty<string, KeepingAgent>)
-        member this.Take name =
-            agentHolder.PostAndReply(fun x -> TakeAgent(name, x))
-    
-
-// Define your library scripting code here
-
+open System.Net
+let ck = new CookieContainer()
+let cl = new CookieAwareWebClient(ck)
+let x = new System.Collections.Specialized.NameValueCollection()
+x.Add ("action", "login")
+x.Add("textfield", "tzakharova@hse.ru")
+x.Add("textfield2", "NIRS542admin")
+let ans = cl.UploadValues("http://nirs.hse.ru/nirs/auth.php", x)
+let ans2 = cl.DownloadString("http://nirs.hse.ru/nirs/admin/works.php?status=Unchecked")
+let d = HtmlAgilityPack.HtmlDocument()
+d.LoadHtml(ans2)
+let docs = d.DocumentNode.SelectNodes("//td/table/tr/td/a/strong")
+let f = fun (x:HtmlNode) -> printf "%s" (x.GetAttributeValue("href"))
+List.iter f (List.ofSeq docs )
