@@ -1,0 +1,22 @@
+﻿%{   
+open Bus   
+%}   
+ 
+%token <string> ID   
+%token <int> INT   
+%token <float> FLOAT   
+ 
+%token CL SC   
+%token EVENT COMMAND TRANSFORM RULE   
+%token WITH DO   
+%token EOF   
+ 
+// start   
+%start start   
+%type <string> start   
+
+%%   
+ 
+start:   
+    |                             { "Nothing to see here" }   
+%%
